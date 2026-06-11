@@ -6,19 +6,26 @@
 %  Estilo: padrão de template da disciplina (REVESTU) + didática MJV.
 %  Compilação: pdflatex (2x) — compatível com Overleaf e Google Colab.
 % ============================================================================
-\documentclass[12pt, a4paper]{article}
+\documentclass[11pt, a4paper]{article}
 
 % ---------- Codificação e idioma ----------
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[portuguese]{babel}
-\usepackage[margin=2.6cm]{geometry}
-\setlength{\headheight}{15pt}
 
-% ---------- Tipografia (corpo em sans, como no livro do MJV) ----------
-\usepackage[scaled=0.96]{helvet}     % Helvetica/Nimbus — substituto livre do Univers/Vista Sans
+
+% ---------- Geometria: margens generosas, texto centralizado (estilo MJV) ----------
+\usepackage[
+  top=2.8cm, bottom=2.8cm,
+  left=3.6cm, right=3.6cm,   % colunas laterais = respiro visual
+  headheight=14pt
+]{geometry}
+
+% ---------- Tipografia — Helvetica/Nimbus (Vista Sans do MJV) ----------
+\usepackage[scaled=0.96]{helvet}
 \renewcommand{\familydefault}{\sfdefault}
 \usepackage{microtype}
+\usepackage{setspace}
+\setstretch{1.18}   % entrelinha levemente aberta, mais legível
 
 % ---------- Recursos gráficos e tabelas ----------
 \usepackage{graphicx}
@@ -30,6 +37,8 @@
 \usepackage{framed}
 \usepackage{lettrine}
 \usepackage{ragged2e}
+\usepackage{tabularx}
+\usepackage{multirow}
 
 % ---------- Cores ----------
 \usepackage{xcolor}
@@ -44,18 +53,19 @@
 \usepackage[hidelinks]{hyperref}
 
 % ============================================================================
-%  PALETA  (extraída da capa-mercado.png — vinho / creme / sálvia / vermelho)
-%  >>> Para mudar a identidade, ajuste apenas as cores abaixo. <<<
+%  PALETA  (vinho/creme/sálvia da capa + vermelho MJV para abertura de seção)
 % ============================================================================
-\definecolor{wineDeep}{HTML}{5C1519}   % vinho escuro — títulos e contraste
-\definecolor{wine}{HTML}{7A1F1E}        % vinho — capa e cabeçalhos
-\definecolor{redAccent}{HTML}{BC3B2C}   % vermelho — rótulos e destaques
-\definecolor{sage}{HTML}{828C52}        % verde-sálvia — números e detalhes
-\definecolor{sageSoft}{HTML}{A6AE78}    % sálvia clara
-\definecolor{cream}{HTML}{F1EBDD}       % creme — fundos de bloco
-\definecolor{creamMid}{HTML}{E5DECC}    % creme médio — linhas de tabela
-\definecolor{ink}{HTML}{17161E}         % quase-preto azulado — texto
-\definecolor{slate}{HTML}{6E5F5F}       % cinza-quente — rótulos e dados
+\definecolor{wineDeep}{HTML}{5C1519}
+\definecolor{wine}{HTML}{7A1F1E}
+\definecolor{redAccent}{HTML}{BC3B2C}   % vermelho rótulos
+\definecolor{redMJV}{HTML}{E63229}      % vermelho vivo blocos de seção (igual MJV)
+\definecolor{sage}{HTML}{828C52}
+\definecolor{sageSoft}{HTML}{A6AE78}
+\definecolor{cream}{HTML}{F1EBDD}
+\definecolor{creamMid}{HTML}{E5DECC}
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{slate}{HTML}{6E5F5F}
+\definecolor{lightgray}{HTML}{F4F4F4}
 
 \hypersetup{
   colorlinks=true, linkcolor=wineDeep, urlcolor=wine, citecolor=wine,
@@ -76,44 +86,104 @@
 \newcommand{\matData}{Recife, junho de 2026}
 
 % ============================================================================
-%  ABERTURA DE SEÇÃO  (número grande à direita + título — estilo capítulo)
+%  ABERTURA DE SEÇÃO — estilo MJV
+%  Título grande em wineDeep, seguido de linha fina redAccent
+%  (a página de abertura com bloco colorido é feita via \aberturaSecao)
 % ============================================================================
-\titleformat{\section}[display]
-  {\normalfont\sffamily}
-  {\flushright\fontsize{84}{84}\selectfont\bfseries\color{sageSoft}\thesection}
-  {6pt}
-  {\Huge\bfseries\color{wineDeep}\filright}
-\titlespacing*{\section}{0pt}{0pt}{28pt}
 
-\titleformat{\subsection}
-  {\normalfont\sffamily\large\bfseries\color{wineDeep}}
-  {\thesubsection}{0.6em}{}
-\titlespacing*{\subsection}{0pt}{16pt}{6pt}
-
-\newcommand{\novaSecao}[1]{\clearpage\vspace*{2.0cm}\section{#1}}
-
-% Rótulo didático estilo MJV (O QUE É? / DE ONDE VEM? / COMO APLICAR?)
-\newcommand{\rotulo}[1]{%
-  \par\vspace{10pt}\noindent
-  {\sffamily\bfseries\color{redAccent}\normalsize\MakeUppercase{#1}}\par\vspace{1pt}}
-
-% ---------- Cabeçalho e rodapé ----------
-\fancypagestyle{corpo}{%
-  \fancyhf{}
-  \renewcommand{\headrulewidth}{0.6pt}
-  \renewcommand{\headrule}{\hbox to\headwidth{\color{wine}\leaders\hrule height \headrulewidth\hfill}}
-  \fancyhead[L]{\footnotesize\sffamily\textcolor{wineDeep}{\textbf{Empreendedorismo \& Mercado}}}
-  \fancyhead[R]{\footnotesize\sffamily\textcolor{slate}{Material de apoio \textperiodcentered\ 4ª entrega}}
-  \fancyfoot[L]{\footnotesize\sffamily\textcolor{slate}{\matInstituicao}}
-  \fancyfoot[R]{\footnotesize\sffamily\textcolor{wineDeep}{\textbf{\thepage}}}
+% \novaSecao{título}{subtítulo-breve}
+% Gera uma página de abertura com bloco de cor, título branco grande e lead
+\newcommand{\novaSecao}[2]{%
+  \clearpage
+  \thispagestyle{empty}%
+  \begin{tikzpicture}[remember picture, overlay]
+    % bloco colorido cobre ~55% da altura da página
+    \fill[redMJV]
+      (current page.north west)
+      rectangle
+      ([yshift=-0.54\paperheight]current page.north east);
+    % título branco
+    \node[anchor=north west,
+          text=white,
+          font=\sffamily\bfseries\fontsize{44}{50}\selectfont,
+          text width=0.62\paperwidth,
+          align=left,
+          inner sep=0]
+      at ([xshift=3.6cm, yshift=-2.8cm]current page.north west)
+      {#1};
+    % subtítulo / lead
+    \node[anchor=north west,
+          text=white,
+          font=\sffamily\fontsize{14}{19}\selectfont,
+          text width=0.62\paperwidth,
+          align=left,
+          inner sep=0]
+      at ([xshift=3.6cm, yshift=-0.42\paperheight]current page.north west)
+      {#2};
+  \end{tikzpicture}%
+  \vspace*{0.57\paperheight}%
+  % NÃO faz segundo clearpage — conteúdo começa logo abaixo na mesma página
 }
 
-% ---------- Citação / definição em destaque (recuo + barra lateral) ----------
+% \section reformatado: título grande no topo da página de conteúdo
+\titleformat{\section}[block]
+  {\normalfont\sffamily\bfseries\fontsize{28}{32}\selectfont\color{ink}}
+  {}{0pt}{}[\vspace{4pt}{\color{redAccent}\rule{\linewidth}{1.4pt}}\vspace{12pt}]
+\titlespacing*{\section}{0pt}{0pt}{18pt}
+
+\titleformat{\subsection}
+  {\normalfont\sffamily\bfseries\large\color{wineDeep}}
+  {}{0pt}{}
+\titlespacing*{\subsection}{0pt}{16pt}{4pt}
+
+% ============================================================================
+%  RÓTULO DIDÁTICO — estilo MJV duas colunas, SEM minipage
+%  A barra vermelha e o label ficam na margem esquerda via \marginnote-like trick
+%  Implementação: recuo de parágrafo + label inline à esquerda
+%
+%  Uso: \rotulo{O que é}
+%  \fimRotulo — NÃO é mais necessário (mantido como \relax para compatibilidade)
+% ============================================================================
+\newcommand{\rotulo}[1]{%
+  \par\vspace{16pt}%
+  \noindent
+  \begin{tikzpicture}[remember picture, overlay]
+    \draw[color=redAccent, line width=1.2pt]
+      ([xshift=-1.5cm, yshift=0.2ex]0,0) -- ([xshift=-1.5cm, yshift=-1.6em]0,0);
+    \node[anchor=north east, text=redAccent,
+          font=\sffamily\bfseries\fontsize{7}{8}\selectfont,
+          align=right, text width=1.25cm]
+      at ([xshift=-1.65cm, yshift=0.15ex]0,0)
+      {\MakeUppercase{#1}};
+  \end{tikzpicture}%
+  \ignorespaces
+}
+
+% fimRotulo — mantido como no-op para não quebrar o documento
+\newcommand{\fimRotulo}{\par\vspace{2pt}}
+
+% ============================================================================
+%  CAIXA DE DESTAQUE — fundo sólido redMJV, texto branco (estilo MJV real)
+% ============================================================================
+\newenvironment{caixaDestaque}{%
+  \par\vspace{10pt}%
+  \noindent\colorbox{redMJV}{%
+    \begin{minipage}{\dimexpr\linewidth-2\fboxsep\relax}%
+      \setlength{\parskip}{5pt}%
+      \vspace{8pt}%
+      \color{white}\sffamily\small%
+}{%
+      \vspace{8pt}%
+    \end{minipage}%
+  }\par\vspace{10pt}%
+}
+
+% ---------- Citação com barra lateral (para citações de autores) ----------
 \newenvironment{citacaoBox}{%
   \par\vspace{6pt}%
-  \def\FrameCommand{{\color{sage}\vrule width 2.5pt}\hspace{12pt}}%
+  \def\FrameCommand{{\color{redAccent}\vrule width 3pt}\hspace{14pt}}%
   \MakeFramed{\advance\hsize-\width\FrameRestore}%
-  \small\itshape\color{ink}%
+  \small\itshape\color{ink!80}%
 }{%
   \par\endMakeFramed\vspace{6pt}%
 }
@@ -123,7 +193,18 @@
   \end{citacaoBox}%
 }
 
-% ---------- Macro do Lean Canvas (caixa) ----------
+% ============================================================================
+%  CABEÇALHO E RODAPÉ — estilo MJV: mínimo, rodapé com seção + número
+% ============================================================================
+\fancypagestyle{corpo}{%
+  \fancyhf{}
+  \renewcommand{\headrulewidth}{0pt}   % sem linha de header — mais limpo
+  \fancyfoot[L]{\footnotesize\sffamily\textcolor{slate!70}{\leftmark}}
+  \fancyfoot[R]{\footnotesize\sffamily\textcolor{ink}{\textbf{\thepage}}}
+}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
+% ---------- Macro do Lean Canvas (caixa) — mantida, usada no diagrama ----------
 \newcommand{\cvbox}[7]{%
   \draw[fill=cream, draw=sageSoft, line width=0.8pt] (#1,#2) rectangle (#1+#3,#2+#4);
   \node[anchor=north west, text width=\dimexpr #3cm-12pt\relax, align=left, inner sep=0pt]
@@ -135,10 +216,10 @@
 % ---------- Referências ----------
 \newcommand{\refnum}[1]{\textcolor{wineDeep}{\sffamily\bfseries[#1]}\ }
 
-\setlength{\parskip}{6pt}
+\setlength{\parskip}{7pt}
 \setlength{\parindent}{0pt}
 
-% Nomes de legenda em PT (robusto, independe do babel)
+% Nomes de legenda em PT
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Tabela}
 
@@ -280,7 +361,7 @@ usa uma ferramenta é o que transforma preenchimento mecânico em análise real.
 \par}
 
 % ============================================================================
-\novaSecao{O que é empreendedorismo}
+\novaSecao{O que é empreendedorismo}{Empreender é identificar uma oportunidade onde outros veem apenas o estado das coisas — e agir.}
 % ============================================================================
 
 O termo \textbf{empreendedorismo} é frequentemente reduzido, no senso comum, à
@@ -323,6 +404,7 @@ de qualquer empreendimento, tudo que existe são hipóteses \textemdash{} e o
 papel do empreendedor é testá-las o mais rápido e barato possível, antes de
 investir pesado em uma direção que pode estar errada.
 
+\fimRotulo
 \rotulo{Empreendedorismo no mundo real}
 
 Vejamos dois exemplos que ilustram o conceito além da teoria:
@@ -345,6 +427,7 @@ Em ambos os casos, o ponto de partida foi uma \textbf{dor real de um público
 real} \textemdash{} não uma tecnologia em busca de uso. Essa inversão de
 raciocínio é central ao empreendedorismo contemporâneo.
 
+\fimRotulo
 \rotulo{Por que isso importa no projeto}
 
 O projeto integrador é, em escala, um exercício de empreendedorismo. Os grupos
@@ -355,8 +438,9 @@ alguém adotaria o que fazemos?''. É a mentalidade empreendedora que dá sentid
 a essa pergunta \textemdash{} e é a análise mercadológica que oferece os
 instrumentos para respondê-la.
 
+\fimRotulo
 % ============================================================================
-\novaSecao{Por que a análise mercadológica}
+\novaSecao{Por que a análise mercadológica}{Antes de construir, é preciso entender o mercado em que a solução pretende existir.}
 % ============================================================================
 
 \textbf{Análise mercadológica} é o estudo sistemático do ambiente de mercado
@@ -380,6 +464,7 @@ concorrenciais, e seu desempenho depende da posição que ocupa em relação a
 essas forças. Conhecer os concorrentes não é opcional \textemdash{} é o ponto
 de partida de qualquer decisão estratégica.
 
+\fimRotulo
 \rotulo{As três perguntas da etapa}
 
 A análise mercadológica de um projeto pode ser resumida em três perguntas que
@@ -399,6 +484,7 @@ da solução na realidade. Para respondê-las, produzem-se quatro artefatos,
 tratados nas seções seguintes: o \textit{benchmarking}, a pesquisa desk, o
 Lean Canvas e a análise do diferencial competitivo.
 
+\fimRotulo
 \rotulo{Por que isso importa antes de prototipar}
 
 Considere o Orkut. Lançado pelo Google em 2004, chegou a ser a maior rede
@@ -413,8 +499,9 @@ ela é o que separa uma solução que existe de uma solução que \textit{persis
 No projeto de vocês, o esforço é proporcional \textemdash{} mas o raciocínio
 é exatamente o mesmo.
 
+\fimRotulo
 % ============================================================================
-\novaSecao{Benchmarking}
+\novaSecao{Benchmarking}{Comparar sistematicamente é a única forma de saber onde está a oportunidade real.}
 % ============================================================================
 \rotulo{O que é}
 \textit{Benchmarking} é o processo de comparar sistematicamente uma solução com
@@ -428,6 +515,7 @@ Aplicado a projetos de negócio ou de produto digital, o benchmarking responde
 à pergunta: \textbf{em relação às alternativas existentes, onde está a
 oportunidade?}
 
+\fimRotulo
 \rotulo{De onde vem}
 A prática foi formalizada pela \textbf{Xerox} no final da década de 1970.
 Diante da perda de participação de mercado para concorrentes japoneses,
@@ -436,6 +524,7 @@ setor \textemdash{} não apenas da indústria de impressão. A sistematização
 do método foi publicada por \textbf{Robert Camp} em 1989, estabelecendo o
 benchmarking como ferramenta estruturada de gestão.
 
+\fimRotulo
 \rotulo{Tipos de benchmarking}
 Nem todo benchmarking é igual. Dependendo do objetivo, utiliza-se um tipo
 diferente:
@@ -464,6 +553,7 @@ diferente:
     como facilitar a ação de contribuir.
 \end{itemize}
 
+\fimRotulo
 \rotulo{Concorrentes diretos e indiretos}
 A comparação distingue dois tipos de concorrente. O \textbf{concorrente direto}
 oferece essencialmente a mesma solução ao mesmo público. O \textbf{concorrente
@@ -473,6 +563,7 @@ justamente neles que costuma residir a concorrência mais real. Quando o Spotify
 chegou ao Brasil, o concorrente mais perigoso não era outro app de streaming:
 era o hábito de ouvir rádio AM/FM.
 
+\fimRotulo
 \rotulo{Exemplo real de benchmarking de UX}
 
 O time de design do iFood realizou benchmarking contínuo com Uber Eats e
@@ -482,6 +573,7 @@ de decisão rápida. O resultado informou redesenhos no fluxo de seleção de
 restaurante e nos filtros de busca \textemdash{} melhorias que não vinham de
 comparação direta com concorrentes, mas de referências de setores adjacentes.
 
+\fimRotulo
 \rotulo{Como aplicar}
 O benchmarking se materializa em uma \textbf{tabela comparativa}, na qual cada
 concorrente é avaliado segundo critérios relevantes ao problema. A
@@ -517,8 +609,9 @@ A leitura da tabela é tão importante quanto sua construção: a coluna em que
 de oportunidade que a nova solução pode ocupar. Essa observação é o elo direto
 com o diferencial competitivo, tratado na Seção~\ref{sec:diferencial}.
 
+\fimRotulo
 % ============================================================================
-\novaSecao{Pesquisa Desk}
+\novaSecao{Pesquisa Desk}{O que fontes públicas revelam sobre o mercado antes de qualquer ida a campo.}
 % ============================================================================
 \rotulo{O que é}
 A \textbf{pesquisa desk} (ou pesquisa documental secundária) é a investigação
@@ -531,6 +624,7 @@ realizar entrevistas, surveys ou testes.
 No contexto da análise mercadológica, a pesquisa desk responde à pergunta:
 \textbf{o que já se sabe sobre o mercado que envolve minha solução?}
 
+\fimRotulo
 \rotulo{De onde vem o nome}
 A expressão deriva de \textit{desktop} (mesa de trabalho): é a pesquisa
 realizada ``de mesa'', sem deslocamento. É etapa consolidada em metodologias de
@@ -538,6 +632,7 @@ pesquisa de mercado e, no campo do \textbf{Design Thinking}, integra a fase de
 \textit{imersão} como forma de mapear tendências, fronteiras do problema e o
 estado da arte das soluções existentes.
 
+\fimRotulo
 \rotulo{Onde investigar}
 As fontes secundárias mais úteis à análise de concorrência e de mercado
 incluem:
@@ -562,6 +657,7 @@ incluem:
     SciELO e ResearchGate.
 \end{itemize}
 
+\fimRotulo
 \rotulo{Exemplo concreto de pesquisa desk}
 
 Considere um grupo desenvolvendo um app para facilitar a doação de alimentos
@@ -581,6 +677,7 @@ de uso (UX) e a comunicação de proximidade geográfica são lacunas
 identificadas. A solução do grupo pode atacar exatamente esses dois pontos.
 \end{citacaoBox}
 
+\fimRotulo
 \rotulo{Como registrar}
 A coleta deve registrar \textbf{a fonte e o período} de consulta. A indicação
 precisa \textemdash{} por exemplo, ``avaliações da Google Play consultadas em
@@ -592,8 +689,9 @@ completar a formulação \textbf{``o mercado já oferece X, mas ainda falha em
 Y''} \textemdash{} pois é nessa falha que a solução encontra sua justificativa
 e seu diferencial.
 
+\fimRotulo
 % ============================================================================
-\novaSecao{Lean Canvas}
+\novaSecao{Lean Canvas}{Um quadro de uma página que força a clareza sobre o modelo de negócio inteiro.}
 % ============================================================================
 \rotulo{O que é}
 O \textbf{Lean Canvas} é um quadro de uma única página que sintetiza o modelo
@@ -604,6 +702,7 @@ tudo caiba em uma página, o Lean Canvas obriga a clareza e expõe as hipóteses
 que precisam ser testadas \textemdash{} o que o torna especialmente útil em
 estágios iniciais, quando quase tudo ainda é incerto.
 
+\fimRotulo
 \rotulo{De onde vem}
 O Lean Canvas tem origem direta no \textbf{Business Model Canvas}, desenvolvido
 por \textbf{Alexander Osterwalder e Yves Pigneur} em 2010, que propôs descrever
@@ -616,6 +715,7 @@ e ``Vantagem Competitiva''. Essa adaptação dialoga com o movimento
 Development}, de \textbf{Steve Blank}, ambos centrados na ideia de testar
 hipóteses de negócio cedo e com baixo custo.
 
+\fimRotulo
 \rotulo{Os nove blocos}
 O preenchimento \textbf{não segue a ordem visual} do quadro. A sequência
 recomendada começa pelo \textbf{Problema} e pelos \textbf{Segmentos de
@@ -739,6 +839,7 @@ A Figura~\ref{fig:canvas} apresenta a estrutura completa do quadro.
 \label{fig:canvas}
 \end{figure}
 
+\fimRotulo
 \rotulo{Como aplicar}
 O Lean Canvas não registra certezas, e sim \textbf{hipóteses} \textemdash{} as
 melhores estimativas disponíveis no momento. Seu valor está em tornar visíveis
@@ -753,6 +854,7 @@ com desejos. ``Nosso app terá 100 mil usuários no primeiro mês'' não é hip�
 R\$\,9,90/mês por acesso a uma plataforma de moda circular, com base nas
 avaliações positivas de apps similares'' é uma hipótese testável.
 
+\fimRotulo
 \subsection{Exemplo: Lean Canvas da Netflix (1997)}
 
 Para ilustrar o preenchimento, observe como o modelo de negócio original da
@@ -813,7 +915,7 @@ Boca a boca (referral). \\
 {\small\color{slate}\itshape O exemplo acima é uma reconstrução didática baseada em informações públicas sobre o modelo original da Netflix. A empresa evoluiu o canvas várias vezes antes de pivotarem para streaming em 2007.}
 
 % ============================================================================
-\novaSecao{Inovação e Diferencial Competitivo}\label{sec:diferencial}
+\novaSecao{Inovação e Diferencial Competitivo}{Por que alguém escolheria a sua solução e não outra?}\label{sec:diferencial}
 % ============================================================================
 \rotulo{O que é}
 O \textbf{diferencial competitivo} é o conjunto de atributos que distingue uma
@@ -826,6 +928,7 @@ que o concorrente não tem, mas se nenhuma delas resolve uma dor real melhor do 
 a alternativa atual, não há diferencial real. O diferencial competitivo é
 \textbf{percebido pelo público} \textemdash{} não declarado pelo criador.
 
+\fimRotulo
 \rotulo{De onde vem}
 A noção foi formalizada por \textbf{Michael Porter} no conceito de
 \textit{vantagem competitiva}: a posição superior que uma organização constrói ao
@@ -839,6 +942,7 @@ frequência, significa \textbf{realizar melhor aquilo que o mercado ainda faz ma
 entregar mais rápido, com mais transparência, com melhor experiência de uso, para
 um público que até então era mal atendido.
 
+\fimRotulo
 \rotulo{Tipos de diferencial}
 
 \begin{itemize}[leftmargin=1.4em, itemsep=5pt, label=\textcolor{sage}{\textbf{\textbullet}}]
@@ -863,6 +967,7 @@ um público que até então era mal atendido.
     mapeamento estático conseguia replicar.
 \end{itemize}
 
+\fimRotulo
 \rotulo{Como formular}
 Um diferencial bem construído conecta os artefatos anteriores. Ele parte das
 lacunas reveladas pelo benchmarking e pela pesquisa desk e as articula com a
@@ -881,8 +986,9 @@ A segunda formulação é específica, decorre da pesquisa e cita a evidência. 
 esse tipo de articulação que caracteriza um diferencial competitivo consistente
 \textemdash{} e que diferencia a 4ª entrega de um exercício de preenchimento.
 
+\fimRotulo
 % ============================================================================
-\novaSecao{A atividade da 4ª entrega}
+\novaSecao{A atividade da 4ª entrega}{O que produzir, como entregar e como será avaliado.}
 % ============================================================================
 Compreendidos os conceitos, a atividade consiste em produzir os artefatos
 descritos e consolidá-los na seção \textbf{Análise Mercadológica} do relatório,
@@ -895,6 +1001,7 @@ mantida a mesma estrutura adotada nas entregas anteriores.
   \item \textbf{Referências em formato ABNT}, contemplando as fontes reais consultadas \textemdash{} concorrentes e relatórios \textemdash{}, e não apenas o material autoral.
 \end{itemize}
 
+\fimRotulo
 \rotulo{Artefatos a produzir}
 \begin{enumerate}[leftmargin=1.6em, itemsep=3pt, label=\textcolor{sage}{\textbf{\arabic*.}}]
   \item Tabela de benchmarking com concorrentes diretos e indiretos;
@@ -903,6 +1010,7 @@ mantida a mesma estrutura adotada nas entregas anteriores.
   \item Parágrafo de diferencial competitivo ancorado nas lacunas identificadas.
 \end{enumerate}
 
+\fimRotulo
 \rotulo{Critérios de avaliação}
 \begin{table}[H]
 \centering
@@ -921,8 +1029,9 @@ Inovação da Solução / Diferencial Competitivo & 1,0 pt \\
 \label{tab:criterios}
 \end{table}
 
+\fimRotulo
 % ============================================================================
-\novaSecao{Referências}
+\novaSecao{Referências}{Fontes que fundamentam este material.}
 % ============================================================================
 \setlength{\parskip}{10pt}
 
